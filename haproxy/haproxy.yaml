@@ -2,6 +2,9 @@
 - name: Install and configure haproxy
   hosts: localhost
   become: yes
+  vars:
+    cert_file: /add/location/here
+    unifi_host_name: add.host.name
   tasks:
    - name: Ensure haproxy is installed
      yum:
