@@ -26,11 +26,11 @@ defaults
         errorfile 504 /etc/haproxy/errors/504.http
 
 frontend https-in
-        bind {{ ansible_default_ipv4.address }}:443 ssl crt "{{ cert_file }}"
+        bind {{ ansible_default_ipv4.address }}:443 ssl crt {{ cert_file }}
         mode http
         option httplog
         option forwardfor
-        acl host_unifi hdr(host) -i "{{ unifi_host_name }}"
+        acl host_unifi hdr(host) -i {{ unifi_host_name }}
         use_backend unifi if host_unifi
       
 backend unifi
