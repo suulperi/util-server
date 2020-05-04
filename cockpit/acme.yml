@@ -1,0 +1,65 @@
+---
+- name: Install Cockpit and replace default TLS Certificate with LE Cert
+  hosts: localhost
+  become: yes
+  vars:
+    acme_domain_name: add.your.domain
+    acme_fullchain_file: /etc/pki/tls/certs/{{ acme_domain_name }}.crt
+    acme_key_file: /etc/pki/tls/private/{{ acme_domain_name }}.key
+    acme_user: root
+    acme_reload_cmd: ""
+    AWS_ID: add.your.aws.id
+    AWS_KEY: add.your.aws.key
+
+  tasks:
+   - name: Check all dependencies exists
+     dnf:
+       name: "{{ item }}"
+       state: present
+     loop:
+        - curl
+        - cockpit
+        - cronie
+
+   - name: Ensure cron is running
+     service:
+       name: crond
+       state: started
+       enabled: true
+
+   - name: Install acme
+     shell: curl https://get.acme.sh | sh
+     args:
+       creates: "/{{ acme_user }}/.acme.sh"
+       warn: False
+
+   - name: Issue cert for Cockpit
+     shell: '"/{{ acme_user }}/.acme.sh"/acme.sh --issue --dns dns_aws -d {{ acme_domain_name }}'
+     args:
+       creates: /{{ acme_user }}/.acme.sh/{{ acme_domain_name }}/ca.cert
+       warn: False
+     environment:
+       AWS_ACCESS_KEY_ID: "{{ AWS_ID }}"
+       AWS_SECRET_ACCESS_KEY: "{{ AWS_KEY }}"
+
+   - name: Install cert
+     shell: |
+       "/root/.acme.sh"/acme.sh --install-cert -d {{ acme_domain_name }} \
+       --fullchain-file {{ acme_fullchain_file }} \
+       --key-file       {{ acme_key_file }} \
+       --reloadcmd     "{{ acme_reload_cmd }}"
+     args:
+       warn: False
+
+   - name: Create concatenated cert file
+     shell: "cat {{ acme_fullchain_file }} {{ acme_key_file }} > /etc/cockpit/ws-certs.d/LE-{{ acme_domain_name }}.cert"
+     args:
+       warn: False
+     notify:
+     - Restart cockpit
+
+  handlers:
+   - name: Restart cockpit
+     service:
+       name: cockpit
+       state: restarted
