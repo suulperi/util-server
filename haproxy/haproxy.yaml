@@ -26,7 +26,8 @@
        mode: 0644
      notify:
      - Restart haproxy
-  
+     
+  handlers:
    - name: Restart haproxy
      service:
        name: haproxy
