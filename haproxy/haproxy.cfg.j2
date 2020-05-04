@@ -26,6 +26,7 @@ defaults
         errorfile 504 /etc/haproxy/errors/504.http
 
 frontend https-in
+        bind {{ ansible_default_ipv4.address }}:80
         bind {{ ansible_default_ipv4.address }}:443 ssl crt {{ cert_file }}
         mode http
         option httplog
