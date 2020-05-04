@@ -33,7 +33,7 @@
        creates: "/{{ acme_user }}/.acme.sh"
        warn: False
 
-   - name: Issue cert for Cockpit
+   - name: Issue cert for Cockpit using AWS DNS API
      shell: '"/{{ acme_user }}/.acme.sh"/acme.sh --issue --dns dns_aws -d {{ acme_domain_name }}'
      args:
        creates: /{{ acme_user }}/.acme.sh/{{ acme_domain_name }}/ca.cert
